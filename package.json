@@ -46,7 +46,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/avaritiachaos/qoder-proxy"
+    "url": "https://github.com/lininn/qorder-proxy"
   },
   "dependencies": {
     "express": "^4.18.2",

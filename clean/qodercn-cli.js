@@ -217,14 +217,39 @@ function ensureRuntimeHome(rootDir) {
   return runtimeHome;
 }
 
+/**
+ * Return true when the CLI has usable stored OAuth credentials on this
+ * machine (login-based auth), so a possibly-stale PAT can be omitted from
+ * the child environment. PAT auth preempts stored-credential auth inside
+ * qoderclicn, so injecting an expired PAT would fail the whole request even
+ * though a working OAuth session exists on disk.
+ */
+function hasStoredCredentials(backend) {
+  const cfg = backend || getCliBackend();
+  try {
+    if (cfg.name === 'global') {
+      const oauthDir = path.join(cfg.homeDir, '.auth');
+      return fs.existsSync(oauthDir) && fs.readdirSync(oauthDir).length > 0;
+    }
+    const userFile = path.join(cfg.homeDir, '.auth-cn', 'user');
+    return fs.existsSync(userFile) && fs.statSync(userFile).size > 0;
+  } catch (_) {
+    return false;
+  }
+}
+
 function buildChildEnv(rootDir, token, backend) {
   ensureRuntimeHome(rootDir);
   const cfg = backend || getCliBackend();
   // Don't override HOME/USERPROFILE — let the CLI find its auth config
   // in the real home directory (same as running the CLI directly).
   const env = { ...process.env };
-  // Set the backend-specific token env var
-  env[cfg.tokenEnvVar] = token;
+  // Drop any stale PAT inherited from the parent process so the CLI can
+  // fall back to stored OAuth credentials when we decide not to inject one.
+  delete env[cfg.tokenEnvVar];
+  if (token && !hasStoredCredentials(cfg)) {
+    env[cfg.tokenEnvVar] = token;
+  }
   return env;
 }
 
@@ -397,11 +422,11 @@ function runQoderCnCli({
 }) {
   const backend = getCliBackend();
   const token = process.env[backend.tokenEnvVar];
-  if (!token) {
+  if (!token && !hasStoredCredentials(backend)) {
     throw new AppError(
       401,
       'cli_token_missing',
-      `${backend.tokenEnvVar} is not configured. Set it in .env or run \`${backend.command} login\` first.`,
+      `${backend.tokenEnvVar} is not configured and no stored login credentials were found. Set it in .env or run \`${backend.command} login\` first.`,
       'authentication_error'
     );
   }
@@ -566,11 +591,11 @@ function runQoderCnCliStream({
 }) {
   const backend = getCliBackend();
   const token = process.env[backend.tokenEnvVar];
-  if (!token) {
+  if (!token && !hasStoredCredentials(backend)) {
     throw new AppError(
       401,
       'cli_token_missing',
-      `${backend.tokenEnvVar} is not configured. Set it in .env or run \`${backend.command} login\` first.`,
+      `${backend.tokenEnvVar} is not configured and no stored login credentials were found. Set it in .env or run \`${backend.command} login\` first.`,
       'authentication_error'
     );
   }

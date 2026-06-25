@@ -61,8 +61,8 @@ qodercli login   # must log in once
 **Clone from GitHub and link locally (recommended)**:
 
 ```bash
-git clone https://github.com/avaritiachaos/qoder-proxy.git
-cd qoder-proxy/qoder-proxy
+git clone https://github.com/lininn/qorder-proxy.git
+cd qorder-proxy/qoder-proxy
 npm install
 npm link
 ```

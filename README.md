@@ -61,8 +61,8 @@ qodercli login   # 必须登录一次
 **从 GitHub 下载并本地链接（推荐）**：
 
 ```bash
-git clone https://github.com/avaritiachaos/qoder-proxy.git
-cd qoder-proxy/qoder-proxy
+git clone https://github.com/lininn/qorder-proxy.git
+cd qorder-proxy/qoder-proxy
 npm install
 npm link
 ```
