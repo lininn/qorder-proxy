@@ -1,29 +1,34 @@
 {
-  "name": "qoder-proxy",
-  "version": "1.4.0",
-  "description": "Local OpenAI / Anthropic compatible proxy for Qoder CLI and Qoder CN CLI",
-  "main": "clean/server.js",
+  "name": "qorder-proxy",
+  "version": "2.0.0",
+  "description": "Local OpenAI / Anthropic compatible proxy for Qoder CLI - with daemon mode and web setup",
+  "main": "lib/server.js",
+  "bin": {
+    "qorder-proxy": "./bin/qorder-proxy.js"
+  },
   "files": [
+    "bin/",
+    "lib/",
     "clean/",
+    "public/",
+    "public-setup/",
     "scripts/",
-    "test/",
     "opencode.json",
-    "start-proxy.cmd",
     "CHANGELOG.md",
     "README.md",
-    "README.zh-CN.md",
     "SECURITY.md",
     "LICENSE",
     ".env.example"
   ],
   "scripts": {
-    "start": "node clean/server.js",
-    "dev": "node clean/server.js",
+    "start": "node bin/qorder-proxy.js run",
+    "dev": "node bin/qorder-proxy.js run",
     "test": "node --test",
     "smoke": "node scripts/smoke.js",
     "smoke:full": "node scripts/smoke.js --full"
   },
   "keywords": [
+    "qorder-proxy",
     "qoder",
     "qoder-cn",
     "qodercn",
@@ -33,7 +38,10 @@
     "compatibility",
     "protocol-research",
     "streaming",
-    "tool-calls"
+    "tool-calls",
+    "proxy-server",
+    "daemon",
+    "cli"
   ],
   "license": "MIT",
   "repository": {
@@ -47,5 +55,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "preferGlobal": true
 }

@@ -7,6 +7,7 @@ const MODELS = [
   { id: 'qwen3.7-max-effort-high', name: 'Qwen3.7-Max high', cliModel: 'Qwen3.7-Max', reasoning: true, effortAlias: true },
   { id: 'qwen3.7-max-effort-max', name: 'Qwen3.7-Max max', cliModel: 'Qwen3.7-Max', reasoning: true, effortAlias: true },
   { id: 'glm-5.1', name: 'GLM-5.1', cliModel: 'GLM-5.1', reasoning: true },
+  { id: 'glm-5.2', name: 'GLM-5.2', cliModel: 'GLM-5.2', reasoning: true },
   { id: 'kimi-k2.6', name: 'Kimi-K2.6', cliModel: 'Kimi-K2.6', reasoning: true },
   { id: 'qwen3.6-plus', name: 'Qwen3.6-Plus', cliModel: 'Qwen3.6-Plus', reasoning: true },
   { id: 'qwen3.6-flash', name: 'Qwen3.6-Flash', cliModel: 'Qwen3.6-Flash', reasoning: true },

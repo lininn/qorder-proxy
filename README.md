@@ -1,14 +1,26 @@
-# Qoder Proxy
+# Qorder Proxy
 
 ## 免责声明
 
-本项目仅用于个人账号的本地兼容性实验与协议适配研究。
+**本项目仅用于个人账号的本地兼容性实验与协议适配研究，不用于任何商业或生产用途。**
+
 使用者必须自行持有合法的 Qoder 账号和 Personal Access Token。
 本项目不提供、共享、转售、出租任何 Qoder 账号、Token 或额度。
 不得将本项目部署为公网服务、公益站、商业 API、中转站或多人共享服务。
 不得用于规避 Qoder 官方的计费、风控、速率限制、地域限制或使用限制。
 请遵守 Qoder 官方服务条款；如官方不允许，请立即停止使用。
 本项目与 Qoder 官方无关。
+
+**如果本项目存在任何侵犯 Qoder 或相关方合法权益的情形，作者将在收到通知后立即删除本项目及所有相关代码。**
+
+### 禁止用途 / Abuse Policy
+
+- 禁止公网部署
+- 禁止多人共享
+- 禁止转售 API
+- 禁止绕过官方计费、风控、速率、地域或使用限制
+- 禁止收集、保存或转发他人的 Token
+- 禁止提供、共享、出租、转售任何账号、Token 或额度
 
 [English](README.en.md)
 
@@ -23,58 +35,11 @@
 
 它不是官方 API，不代表 Qoder 官方授权，也不提供任何账号、Token 或额度服务。所有请求都依赖使用者自行配置的个人 Qoder 认证。
 
-## 工作原理
+## 快速开始
 
-`qoderclicn` 和 `qodercli` 都是命令行工具，接受文本输入并返回文本输出。许多本地客户端或开发工具使用 OpenAI 或 Anthropic 格式的 HTTP API。本项目作为本地适配层：接收兼容格式请求，将其转换为 CLI 调用，再把 CLI 输出整理为兼容格式响应。
+需要 Node.js 18+ 和 Qoder CLI。
 
-支持两种本地协议格式：
-
-- **OpenAI 兼容格式**：`/v1/chat/completions`
-- **Anthropic 兼容格式**：`/v1/messages`
-
-两种格式均支持工具调用字段适配（`tool_calls` / `tool_use`），用于协议兼容性研究。可靠性取决于底层模型是否能稳定输出符合格式的 JSON。
-
-## 工具调用实现方式
-
-由于 CLI 本身只处理文本，不具备原生工具调用通道，本项目采用 Prompt 格式指令 + 输出解析的方式实现工具调用适配：将工具定义作为格式说明加入请求上下文，再从模型文本输出中提取 JSON。
-
-这与直接调用 OpenAI、Anthropic、DeepSeek 等官方 API 不同。官方 API 通常提供原生 `tools` 参数通道；本项目只能做文本层面的协议模拟，因此不应把它视为等价替代。
-
-## 安全边界
-
-- 默认仅监听 `127.0.0.1`
-- 不建议也不支持作为公网服务、共享服务或商业 API 使用
-- 日志自动脱敏 token、cookie、Authorization 头等敏感信息
-- `.env`、token、日志均不纳入版本控制
-
-### 认证方式
-
-| 后端 | 认证方式 | 环境变量 |
-|------|--------|--------|
-| CN (`qoderclicn`) | Personal Access Token | `QODERCN_PERSONAL_ACCESS_TOKEN` |
-| Global (`qodercli`) | OAuth 登录（`qodercli login`） | 无需配置 |
-
-## 禁止用途 / Abuse Policy
-
-- 禁止公网部署
-- 禁止多人共享
-- 禁止转售 API
-- 禁止绕过官方计费、风控、速率、地域或使用限制
-- 禁止收集、保存或转发他人的 Token
-- 禁止提供、共享、出租、转售任何账号、Token 或额度
-
-## 安全建议
-
-- 只在本机使用
-- 只监听 `127.0.0.1`
-- 不要绑定 `0.0.0.0`，不要暴露到公网
-- 不要把 Token 发给别人
-- 不要把 `.env` 提交到 Git
-- 如果怀疑 Token 泄露，立即到 Qoder 官方账号页面吊销 PAT 并重新创建
-
-## 安装
-
-需要 Node.js 18+。
+### 1. 安装 Qoder CLI
 
 **CN 后端**（必须）：
 
@@ -91,52 +56,165 @@ qodercli --version
 qodercli login   # 必须登录一次
 ```
 
-安装依赖并创建配置：
+### 2. 安装 qorder-proxy
 
-```powershell
+**从 GitHub 下载并本地链接（推荐）**：
+
+```bash
+git clone https://github.com/avaritiachaos/qoder-proxy.git
+cd qoder-proxy/qoder-proxy
 npm install
-Copy-Item .env.example .env
+npm link
 ```
 
-编辑 `.env`，配置后端和认证：
+`npm link` 会将 `qorder-proxy` 命令注册到全局，之后在任何目录都可以直接使用。
 
-```env
-# 选择后端: "cn" 或 "global"
-CLI_BACKEND=cn
+验证安装：
 
-# CN 后端：填入你的 Personal Access Token
-QODERCN_PERSONAL_ACCESS_TOKEN=your-cn-token
+```bash
+qorder-proxy --version
+# qorder-proxy v2.0.0
+```
 
-# Global 后端：运行 qodercli login 后无需配置令牌
+### 3. 配置
+
+**Web 配置界面（推荐）**：
+
+```bash
+qorder-proxy --web
+```
+
+浏览器自动打开配置页面，填写：
+
+- **端口**：代理监听端口（默认 3000）
+- **后端**：Qoder CN 或 Qoder Global
+- **认证 Token**：你的 Personal Access Token
+
+保存后配置界面自动关闭。
+
+**CLI 配置（备选）**：
+
+```bash
+qorder-proxy config set token YOUR_TOKEN
+qorder-proxy config set backend cn
+qorder-proxy config set port 3000
 ```
 
 CN 版 PAT 创建入口：https://qoder.com.cn/account/integrations
 
-创建后请妥善保存。不要将 `.env` 提交到 Git，也不要把 Token 填入第三方客户端或分享给他人。
+创建后请妥善保存。不要把 Token 填入第三方客户端或分享给他人。
 
-启动：
+### 4. 启动
 
-```powershell
-npm start
+```bash
+qorder-proxy start
 ```
 
-Windows 也可以双击 `start-proxy.cmd`。
-
-启动后默认地址为：
+输出：
 
 ```text
-http://127.0.0.1:3000
+🚀 Starting Qorder Proxy daemon...
+   Port: 3000
+   Host: 127.0.0.1
+   Backend: cn
+   PID: 12345
+   Waiting for server to be ready...
+✅ Qorder Proxy is running at http://127.0.0.1:3000
+   Web Console: http://127.0.0.1:3000/ui
+   Logs: qorder-proxy logs
 ```
 
-如果你通过环境变量或代码改动手动设置 host，请保持 `127.0.0.1`。不要绑定 `0.0.0.0`，不要通过端口映射、反向代理、隧道或云服务器暴露给公网。
+### 5. 验证
+
+```bash
+curl http://127.0.0.1:3000/health
+# {"ok":true}
+
+curl http://127.0.0.1:3000/v1/models
+```
+
+## CLI 命令全览
+
+| 命令 | 说明 |
+|------|------|
+| `qorder-proxy --web` | 打开配置 Web 界面，填写 Token/后端/端口 |
+| `qorder-proxy start` | 后台启动代理服务（daemon 模式） |
+| `qorder-proxy stop` | 停止后台代理服务 |
+| `qorder-proxy restart` | 重启（保留原配置） |
+| `qorder-proxy status` | 查看运行状态、PID、端口、Health |
+| `qorder-proxy run` | 前台运行（开发调试，Ctrl+C 退出） |
+| `qorder-proxy logs [-f]` | 查看日志（`-f` 实时跟踪） |
+| `qorder-proxy config list` | 查看所有配置 |
+| `qorder-proxy config set <key> <value>` | 设置配置值 |
+| `qorder-proxy config get <key>` | 查看单个配置 |
+| `qorder-proxy config delete <key>` | 删除配置项 |
+| `qorder-proxy config path` | 查看配置文件路径 |
+| `qorder-proxy doctor` | 诊断检查（Node 版本、CLI、Token、端口） |
+
+### 常用命令示例
+
+```bash
+# 启动
+qorder-proxy start
+
+# 查看状态
+qorder-proxy status
+
+# 查看日志
+qorder-proxy logs
+qorder-proxy logs -f          # 实时跟踪
+
+# 带参数启动
+qorder-proxy start --port 3000 --backend cn --token YOUR_TOKEN
+
+# 前台调试模式
+qorder-proxy run
+
+# 修改配置后重启
+qorder-proxy config set backend global
+qorder-proxy restart
+
+# 诊断
+qorder-proxy doctor
+
+# 停止
+qorder-proxy stop
+```
+
+## 配置说明
+
+配置存储在 `~/.qorder-proxy/config.json`，优先级为：CLI 参数 > 环境变量 > config.json > .env > 默认值。
+
+| 配置键 | 说明 | 默认值 |
+|--------|------|--------|
+| `port` | 代理端口 | 3000 |
+| `host` | 绑定地址 | 127.0.0.1 |
+| `backend` | CLI 后端 (cn/global) | cn |
+| `token` | 认证 Token | (空) |
+| `timeoutMs` | 超时时间 (ms) | 300000 |
+| `reasoningEffort` | 推理强度 | (默认) |
+| `contextWindow` | 上下文窗口 | (默认) |
+| `maxOutputTokens` | 最大输出 tokens | (默认) |
+
+查看配置文件路径：
+
+```bash
+qorder-proxy config path
+# ~/.qorder-proxy/config.json
+```
+
+## 支持的模型
+
+`qoder-cn`、`auto`、`qwen3.7-max`、`glm-5.1`、`glm-5.2`、`kimi-k2.6`、`qwen3.6-plus`、`qwen3.6-flash`、`deepseek-v4-pro`、`deepseek-v4-flash`
+
+Qwen3.7-Max 推理强度别名：`qwen3.7-max-effort-low`、`qwen3.7-max-effort-medium`、`qwen3.7-max-effort-high`、`qwen3.7-max-effort-max`
 
 ## 双后端切换
 
-通过 `.env` 中的 `CLI_BACKEND` 切换后端：
-
-```env
-CLI_BACKEND=cn       # 使用 qoderclicn
-CLI_BACKEND=global   # 使用 qodercli
+```bash
+qorder-proxy config set backend cn       # Qoder CN (qoderclicn)
+qorder-proxy config set backend global   # Qoder Global (qodercli)
+qorder-proxy restart
 ```
 
 | 配置项 | CN 后端 | Global 后端 |
@@ -148,40 +226,30 @@ CLI_BACKEND=global   # 使用 qodercli
 
 切换后端后需重启代理服务生效。
 
-## 支持的模型
-
-`qoder-cn`、`auto`、`qwen3.7-max`、`glm-5.1`、`kimi-k2.6`、`qwen3.6-plus`、`qwen3.6-flash`、`deepseek-v4-pro`、`deepseek-v4-flash`
-
-Qwen3.7-Max 推理强度别名：`qwen3.7-max-effort-low`、`-medium`、`-high`、`-max`
-
 ## 本地客户端适配
 
 ### OpenAI 兼容接口
-
-适用于支持自定义 OpenAI 兼容接口的本地客户端：
 
 - Base URL：`http://127.0.0.1:3000/v1`
 - API Key：填写本地占位值即可，例如 `not-used`
 - Model：从 `/v1/models` 返回列表选择，或手动输入模型 ID
 
-注意：不要将 Qoder CN Token 填入客户端。Token 只应保存在本项目本机 `.env` 中。
+注意：不要将 Qoder Token 填入客户端。Token 只应保存在 `~/.qorder-proxy/config.json` 中。
 
 ### Anthropic 兼容接口
 
-适用于支持自定义 Anthropic 兼容接口的本地客户端：
-
-```powershell
-$env:ANTHROPIC_BASE_URL = "http://127.0.0.1:3000"
-$env:ANTHROPIC_AUTH_TOKEN = "not-used"
+```bash
+export ANTHROPIC_BASE_URL="http://127.0.0.1:3000"
+export ANTHROPIC_AUTH_TOKEN="not-used"
 ```
 
 `ANTHROPIC_BASE_URL` 不要追加 `/v1`，客户端通常会自动拼接 API 路径。
 
 ### OpenCode 示例
 
-仓库自带 `opencode.json` 配置文件，可用于本地兼容性验证：
+仓库自带 `opencode.json` 配置文件：
 
-```powershell
+```bash
 opencode run --model qoder-cn-local/qwen3.7-max --variant high "reply OK"
 ```
 
@@ -191,27 +259,27 @@ opencode run --model qoder-cn-local/qwen3.7-max --variant high "reply OK"
 |------|------|------|
 | GET | `/health` | 健康检查 |
 | GET | `/v1/models` | 模型列表 |
-| POST | `/v1/chat/completions` | OpenAI 兼容格式对话，支持 tools 字段适配 |
-| POST | `/v1/messages` | Anthropic 兼容格式对话，支持 tool_use 字段适配 |
+| POST | `/v1/chat/completions` | OpenAI 兼容格式对话，支持 tools |
+| POST | `/v1/messages` | Anthropic 兼容格式对话，支持 tool_use |
 | POST | `/v1/messages/count_tokens` | Token 估算 |
 
 ## 推理参数
 
-通过环境变量设置全局默认值：
+通过配置或环境变量设置全局默认值：
 
-```powershell
-$env:QODERCN_REASONING_EFFORT = "high"
-$env:QODERCN_CONTEXT_WINDOW = "200000"
-$env:QODERCN_MAX_OUTPUT_TOKENS = "4096"
+```bash
+qorder-proxy config set reasoningEffort high
+qorder-proxy config set contextWindow 200000
+qorder-proxy config set maxOutputTokens 4096
 ```
 
 也可在每次请求中通过 `reasoning_effort`、`context_window`、`max_tokens` 参数单独指定。
 
 ## 流式输出
 
-当客户端请求 `stream: true` 且不包含工具参数时，本项目使用 CLI 的 `--output-format stream-json` 进行增量流式输出，并以 SSE 事件转发给本地客户端。
+当客户端请求 `stream: true` 且不包含工具参数时，使用 CLI 的 `--output-format stream-json` 进行增量流式输出，以 SSE 事件转发。
 
-当请求包含工具参数时，流式请求会自动降级为非流式响应，因为工具调用解析需要完整 JSON 输出。
+当请求包含工具参数时，流式请求自动降级为非流式响应（工具调用解析需要完整 JSON）。
 
 ## 当前限制
 
@@ -220,52 +288,49 @@ $env:QODERCN_MAX_OUTPUT_TOKENS = "4096"
 - 每次请求启动一个新的 CLI 子进程
 - 如果模型输出非法 JSON 或拒绝使用工具格式，响应会降级为纯文本
 
-## 快速验证
+## 安全边界
 
-```powershell
-curl.exe http://127.0.0.1:3000/health
-curl.exe http://127.0.0.1:3000/v1/models
-curl.exe http://127.0.0.1:3000/v1/chat/completions `
-  -H "Content-Type: application/json" `
-  -d "{\"model\":\"qoder-cn\",\"messages\":[{\"role\":\"user\",\"content\":\"reply OK\"}]}"
-```
+- 默认仅监听 `127.0.0.1`
+- 不建议也不支持作为公网服务、共享服务或商业 API 使用
+- 日志自动脱敏 token、cookie、Authorization 头等敏感信息
+- 配置文件权限 0600，仅本机用户可读写
 
-## 测试
+### 认证方式
 
-```powershell
-npm test
-```
+| 后端 | 认证方式 | 环境变量 |
+|------|--------|--------|
+| CN (`qoderclicn`) | Personal Access Token | `QODERCN_PERSONAL_ACCESS_TOKEN` |
+| Global (`qodercli`) | OAuth 登录（`qodercli login`） | 无需配置 |
+
+## 安全建议
+
+- 只在本机使用
+- 只监听 `127.0.0.1`
+- 不要绑定 `0.0.0.0`，不要暴露到公网
+- 不要把 Token 发给别人
+- 不要把 `.env` 提交到 Git
+- 如果怀疑 Token 泄露，立即到 Qoder 官方账号页面吊销 PAT 并重新创建
 
 ## 本地 Web 控制台
 
-启动后访问本地 Web 控制台：
+代理启动后访问：
 
-```
+```text
 http://127.0.0.1:3000/ui
 ```
 
-快捷启动（自动打开浏览器）：
-
-```powershell
-.\start-ui.cmd
-```
-
-### 功能
-
 | Tab | 说明 |
 |-----|------|
-| Dashboard | 显示 /health 状态、Base URL、模型数量、安全状态 |
+| Dashboard | 显示 /health 状态、Base URL、模型数量 |
 | Models | 调用 /v1/models 显示模型列表 |
 | Chat Test | 用 /v1/chat/completions 做简单非流式测试 |
-| Config | 生成 OpenAI Compatible / Anthropic Compatible / OpenCode 配置示例 |
+| Config | 生成 OpenAI / Anthropic / OpenCode 配置示例 |
 | Usage / Credits | 本地用量统计 |
 
 ### 本地用量统计说明
 
 - Usage 页面显示的是**本地估算数据**，不代表 Qoder 官方账单或剩余额度
-- token 数量基于简单字符数估算，标记为 `estimated`，不宣称准确
-- 统计数据保存在内存中，持久化到本地 `usage.json`（不保存 prompt 正文、响应正文、token、Authorization、cookie）
-- 官方额度：`qoderclicn --help` 中没有 quota/credits/usage 命令，因此**不实现官方额度自动读取**
+- token 数量基于简单字符数估算，标记为 `estimated`
 - UI 不会读取、保存、显示 Qoder PAT
 
 ### Usage API
@@ -274,6 +339,12 @@ http://127.0.0.1:3000/ui
 |------|------|------|
 | GET | `/usage/local` | 返回本地用量统计 |
 | POST | `/usage/reset-local` | 重置本地用量统计 |
+
+## 测试
+
+```bash
+npm test
+```
 
 ## 许可证
 

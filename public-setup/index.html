@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qorder Proxy - 配置</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark">
+  <header class="glass topbar">
+    <div class="brand">
+      <span class="brand-icon">◈</span>
+      <span class="brand-text">Qorder Proxy</span>
+      <span class="brand-badge">配置</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="setup-container">
+      <div class="glass card setup-card">
+        <div class="card-header">
+          <span class="card-icon">⛭</span>
+          <h2>代理配置</h2>
+        </div>
+        <p class="setup-desc">配置 Qorder Proxy 的连接参数，保存后即可使用 <code>qorder-proxy start</code> 启动代理服务。</p>
+
+        <form id="setup-form">
+          <!-- 代理端口 -->
+          <div class="form-group">
+            <label for="port">代理端口</label>
+            <input type="number" id="port" name="port" value="3000" min="1024" max="65535" placeholder="3000">
+            <span class="form-hint">代理服务监听的端口号 (默认 3000)</span>
+          </div>
+
+          <!-- CLI 后端 -->
+          <div class="form-group">
+            <label for="backend">CLI 后端</label>
+            <select id="backend" name="backend">
+              <option value="cn">Qoder CN (qoderclicn)</option>
+              <option value="global">Qoder Global (qodercli)</option>
+            </select>
+            <span class="form-hint">选择 Qoder CLI 后端类型</span>
+          </div>
+
+          <!-- 认证 Key -->
+          <div class="form-group">
+            <label for="token">认证 Token</label>
+            <div class="token-input-wrap">
+              <input type="password" id="token" name="token" placeholder="输入你的 Personal Access Token">
+              <button type="button" id="toggle-token" class="btn-icon" title="显示/隐藏 Token">👁</button>
+            </div>
+            <span class="form-hint" id="token-hint">CN 后端使用 QODERCN_PERSONAL_ACCESS_TOKEN</span>
+          </div>
+
+          <!-- 可选参数折叠区 -->
+          <details class="advanced-section">
+            <summary>高级选项 (可选)</summary>
+            <div class="advanced-content">
+              <div class="form-group">
+                <label for="timeoutMs">超时时间 (ms)</label>
+                <input type="number" id="timeoutMs" name="timeoutMs" value="300000" min="10000" max="600000" step="10000">
+                <span class="form-hint">CLI 请求超时时间 (默认 300000ms = 5分钟)</span>
+              </div>
+
+              <div class="form-group">
+                <label for="reasoningEffort">推理强度</label>
+                <select id="reasoningEffort" name="reasoningEffort">
+                  <option value="">默认</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="max">Max</option>
+                </select>
+                <span class="form-hint">推理模式强度 (留空使用默认)</span>
+              </div>
+
+              <div class="form-group">
+                <label for="contextWindow">上下文窗口</label>
+                <input type="number" id="contextWindow" name="contextWindow" placeholder="留空使用默认">
+                <span class="form-hint">最大上下文窗口大小 (tokens)</span>
+              </div>
+
+              <div class="form-group">
+                <label for="maxOutputTokens">最大输出 Tokens</label>
+                <input type="number" id="maxOutputTokens" name="maxOutputTokens" placeholder="留空使用默认">
+                <span class="form-hint">单次请求最大输出 tokens 数</span>
+              </div>
+            </div>
+          </details>
+
+          <!-- 按钮 -->
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="save-btn">💾 保存配置</button>
+            <button type="button" class="btn danger" id="close-btn" style="display:none">✕ 关闭配置界面</button>
+          </div>
+
+          <!-- 状态消息 -->
+          <div id="status-msg" class="status-msg" style="display:none"></div>
+        </form>
+
+        <!-- 保存成功提示 -->
+        <div id="saved-info" class="saved-info" style="display:none">
+          <div class="alert success">
+            ✅ 配置已保存！使用以下命令启动代理服务：
+          </div>
+          <div class="code-block">
+            <pre><code>qorder-proxy start</code></pre>
+            <button class="btn copy" data-target="start-cmd">Copy</button>
+          </div>
+          <div class="code-block" style="margin-top:0.5rem">
+            <pre><code id="connect-info"></code></pre>
+            <button class="btn copy" data-target="connect-info">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

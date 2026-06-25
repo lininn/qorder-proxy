@@ -3,7 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const USAGE_FILE = path.join(__dirname, '..', 'usage.json');
+const USAGE_FILE = process.env.QORDER_USAGE_DIR
+  ? path.join(process.env.QORDER_USAGE_DIR, 'usage.json')
+  : path.join(__dirname, '..', 'usage.json');
 
 const stats = {
   startedAt: new Date().toISOString(),

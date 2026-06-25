@@ -1,14 +1,26 @@
-# Qoder Proxy
+# Qorder Proxy
 
 ## Disclaimer
 
-This project is only for personal-account local compatibility experiments and protocol adapter research.
+**This project is for personal-account local compatibility experiments and protocol adaptation research only. It is not intended for any commercial or production use.**
+
 Users must hold their own lawful Qoder account and Personal Access Token.
 This project does not provide, share, resell, rent, or transfer any Qoder account, Token, or quota.
 Do not deploy this project as a public service, community endpoint, commercial API, relay service, or multi-user shared service.
 Do not use this project to bypass Qoder's official billing, risk controls, rate limits, regional restrictions, or usage restrictions.
 Please comply with Qoder's official terms of service. If official rules do not allow your use case, stop using this project immediately.
 This project is not affiliated with Qoder.
+
+**If this project infringes upon the legitimate rights and interests of Qoder or any related parties, the author will delete this project and all related code immediately upon notice.**
+
+### Abuse Policy
+
+- No public deployment
+- No multi-user sharing
+- No API resale
+- No bypassing official billing, risk controls, rate limits, regional restrictions, or usage restrictions
+- No collecting, storing, or forwarding other people's Tokens
+- No providing, sharing, renting, reselling, or transferring accounts, Tokens, or quota
 
 [中文说明](README.md)
 
@@ -23,58 +35,11 @@ Two backends are supported:
 
 It is not an official API, does not imply official authorization, and does not provide account, Token, or quota services. All model calls depend on the user's own Qoder authentication.
 
-## How It Works
+## Quick Start
 
-`qoderclicn` and `qodercli` are command-line tools that accept text input and return text output. Many local clients and developer tools expect an OpenAI or Anthropic-format HTTP API. This project acts as a local adapter: it receives compatible API requests, translates them into CLI invocations, and converts CLI output back into compatible responses.
+Requires Node.js 18+ and Qoder CLI.
 
-Supported local protocol formats:
-
-- **OpenAI-compatible format**: `/v1/chat/completions`
-- **Anthropic-compatible format**: `/v1/messages`
-
-Both formats include tool-call field adaptation (`tool_calls` / `tool_use`) for compatibility research. Reliability depends on whether the underlying model consistently emits valid JSON.
-
-## Tool Call Implementation
-
-Because the CLI only handles text and has no native tool-calling channel, this project implements tool-call adaptation through prompt format instructions and output parsing: tool definitions are added as formatting guidance, then JSON tool calls are extracted from model text output.
-
-This is different from calling official OpenAI, Anthropic, DeepSeek, or similar APIs. Official APIs usually provide a native `tools` parameter channel. This project only simulates protocol behavior at the text layer and should not be treated as an equivalent replacement.
-
-## Security Boundaries
-
-- Default host is `127.0.0.1`
-- Not intended or supported for public services, shared services, or commercial APIs
-- Logs redact tokens, cookies, Authorization headers, and other sensitive data
-- `.env`, tokens, and logs are excluded from version control
-
-### Authentication
-
-| Backend | Auth Method | Environment Variable |
-|---------|------------|--------------------|
-| CN (`qoderclicn`) | Personal Access Token | `QODERCN_PERSONAL_ACCESS_TOKEN` |
-| Global (`qodercli`) | OAuth login (`qodercli login`) | Not required |
-
-## Abuse Policy
-
-- No public deployment
-- No multi-user sharing
-- No API resale
-- No bypassing official billing, risk controls, rate limits, regional restrictions, or usage restrictions
-- No collecting, storing, or forwarding other people's Tokens
-- No providing, sharing, renting, reselling, or transferring accounts, Tokens, or quota
-
-## Safety Recommendations
-
-- Use only on your own machine
-- Bind only to `127.0.0.1`
-- Do not bind to `0.0.0.0` and do not expose the service to the public internet
-- Do not send your Token to anyone
-- Do not commit `.env` to Git
-- If you suspect a Token leak, revoke the PAT immediately from the official Qoder account page and create a new one
-
-## Setup
-
-Requires Node.js 18+.
+### 1. Install Qoder CLI
 
 **CN backend** (required):
 
@@ -91,70 +56,165 @@ qodercli --version
 qodercli login   # must log in once
 ```
 
-Install dependencies and create configuration:
+### 2. Install qorder-proxy
 
-```powershell
+**Clone from GitHub and link locally (recommended)**:
+
+```bash
+git clone https://github.com/avaritiachaos/qoder-proxy.git
+cd qoder-proxy/qoder-proxy
 npm install
-Copy-Item .env.example .env
+npm link
 ```
 
-Edit `.env` and configure the backend and authentication:
+`npm link` registers the `qorder-proxy` command globally, so you can use it from any directory.
 
-```env
-# Choose backend: "cn" or "global"
-CLI_BACKEND=cn
+Verify installation:
 
-# CN backend: your Personal Access Token
-QODERCN_PERSONAL_ACCESS_TOKEN=your-cn-token
+```bash
+qorder-proxy --version
+# qorder-proxy v2.0.0
+```
 
-# Global backend: no token needed after running qodercli login
+### 3. Configure
+
+**Web setup UI (recommended)**:
+
+```bash
+qorder-proxy --web
+```
+
+The browser opens automatically. Fill in:
+
+- **Port**: proxy listen port (default 3000)
+- **Backend**: Qoder CN or Qoder Global
+- **Auth Token**: your Personal Access Token
+
+After saving, the setup UI closes automatically.
+
+**CLI config (alternative)**:
+
+```bash
+qorder-proxy config set token YOUR_TOKEN
+qorder-proxy config set backend cn
+qorder-proxy config set port 3000
 ```
 
 CN PAT page: https://qoder.com.cn/account/integrations
 
-Store it securely. Do not commit `.env` to Git, and do not enter your Token into third-party clients or share it with others.
+Store it securely. Do not share your Token with anyone.
 
-Start:
+### 4. Start
 
-```powershell
-npm start
+```bash
+qorder-proxy start
 ```
 
-On Windows, you can also double-click `start-proxy.cmd`.
-
-Default local address:
+Output:
 
 ```text
-http://127.0.0.1:3000
+🚀 Starting Qorder Proxy daemon...
+   Port: 3000
+   Host: 127.0.0.1
+   Backend: cn
+   PID: 12345
+   Waiting for server to be ready...
+✅ Qorder Proxy is running at http://127.0.0.1:3000
+   Web Console: http://127.0.0.1:3000/ui
+   Logs: qorder-proxy logs
 ```
 
-If you manually change host behavior through environment variables or code edits, keep it bound to `127.0.0.1`. Do not bind to `0.0.0.0`, and do not expose it through port forwarding, reverse proxies, tunnels, or cloud servers.
+### 5. Verify
+
+```bash
+curl http://127.0.0.1:3000/health
+# {"ok":true}
+
+curl http://127.0.0.1:3000/v1/models
+```
+
+## CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `qorder-proxy --web` | Open setup Web UI to configure Token/backend/port |
+| `qorder-proxy start` | Start proxy as background daemon |
+| `qorder-proxy stop` | Stop background daemon |
+| `qorder-proxy restart` | Restart (preserves config) |
+| `qorder-proxy status` | Show running status, PID, port, Health |
+| `qorder-proxy run` | Run in foreground (dev/debug, Ctrl+C to exit) |
+| `qorder-proxy logs [-f]` | View logs (`-f` to follow) |
+| `qorder-proxy config list` | Show all config values |
+| `qorder-proxy config set <key> <value>` | Set a config value |
+| `qorder-proxy config get <key>` | Get a config value |
+| `qorder-proxy config delete <key>` | Delete a config key |
+| `qorder-proxy config path` | Show config file path |
+| `qorder-proxy doctor` | Diagnostic checks (Node version, CLI, Token, port) |
+
+### Common Examples
+
+```bash
+# Start
+qorder-proxy start
+
+# Check status
+qorder-proxy status
+
+# View logs
+qorder-proxy logs
+qorder-proxy logs -f          # follow
+
+# Start with options
+qorder-proxy start --port 3000 --backend cn --token YOUR_TOKEN
+
+# Foreground debug mode
+qorder-proxy run
+
+# Change config and restart
+qorder-proxy config set backend global
+qorder-proxy restart
+
+# Diagnostics
+qorder-proxy doctor
+
+# Stop
+qorder-proxy stop
+```
+
+## Configuration
+
+Config is stored in `~/.qorder-proxy/config.json`. Priority: CLI flags > env vars > config.json > .env > defaults.
+
+| Key | Description | Default |
+|-----|-------------|---------|
+| `port` | Proxy port | 3000 |
+| `host` | Bind address | 127.0.0.1 |
+| `backend` | CLI backend (cn/global) | cn |
+| `token` | Auth Token | (empty) |
+| `timeoutMs` | Timeout (ms) | 300000 |
+| `reasoningEffort` | Reasoning effort | (default) |
+| `contextWindow` | Context window | (default) |
+| `maxOutputTokens` | Max output tokens | (default) |
+
+Show config file path:
+
+```bash
+qorder-proxy config path
+# ~/.qorder-proxy/config.json
+```
 
 ## Supported Models
 
-`qoder-cn`, `auto`, `qwen3.7-max`, `glm-5.1`, `kimi-k2.6`, `qwen3.6-plus`, `qwen3.6-flash`, `deepseek-v4-pro`, `deepseek-v4-flash`
+`qoder-cn`, `auto`, `qwen3.7-max`, `glm-5.1`, `glm-5.2`, `kimi-k2.6`, `qwen3.6-plus`, `qwen3.6-flash`, `deepseek-v4-pro`, `deepseek-v4-flash`
 
-Qwen3.7-Max reasoning effort aliases: `qwen3.7-max-effort-low`, `-medium`, `-high`, `-max`
-
-## Local Client Adaptation
-
-### OpenAI-Compatible Interface
-
-For local clients that support custom OpenAI-compatible endpoints:
-
-- Base URL: `http://127.0.0.1:3000/v1`
-- API Key: use a local placeholder value, for example `not-used`
-- Model: select from `/v1/models` or enter a model ID manually
-
-Do not enter your Qoder Token into the client. Keep the Token only in this project's local `.env`.
+Qwen3.7-Max reasoning effort aliases: `qwen3.7-max-effort-low`, `qwen3.7-max-effort-medium`, `qwen3.7-max-effort-high`, `qwen3.7-max-effort-max`
 
 ## Dual Backend Switching
 
-Switch backends via `CLI_BACKEND` in `.env`:
-
-```env
-CLI_BACKEND=cn       # use qoderclicn
-CLI_BACKEND=global   # use qodercli
+```bash
+qorder-proxy config set backend cn       # Qoder CN (qoderclicn)
+qorder-proxy config set backend global   # Qoder Global (qodercli)
+qorder-proxy restart
 ```
 
 | Setting | CN Backend | Global Backend |
@@ -166,13 +226,21 @@ CLI_BACKEND=global   # use qodercli
 
 Restart the proxy after switching backends.
 
+## Local Client Adaptation
+
+### OpenAI-Compatible Interface
+
+- Base URL: `http://127.0.0.1:3000/v1`
+- API Key: use a local placeholder value, for example `not-used`
+- Model: select from `/v1/models` or enter a model ID manually
+
+Do not enter your Qoder Token into the client. Keep the Token only in `~/.qorder-proxy/config.json`.
+
 ### Anthropic-Compatible Interface
 
-For local clients that support custom Anthropic-compatible endpoints:
-
-```powershell
-$env:ANTHROPIC_BASE_URL = "http://127.0.0.1:3000"
-$env:ANTHROPIC_AUTH_TOKEN = "not-used"
+```bash
+export ANTHROPIC_BASE_URL="http://127.0.0.1:3000"
+export ANTHROPIC_AUTH_TOKEN="not-used"
 ```
 
 Do not append `/v1` to `ANTHROPIC_BASE_URL`; clients usually add API paths automatically.
@@ -181,7 +249,7 @@ Do not append `/v1` to `ANTHROPIC_BASE_URL`; clients usually add API paths autom
 
 The repository includes `opencode.json` for local compatibility verification:
 
-```powershell
+```bash
 opencode run --model qoder-cn-local/qwen3.7-max --variant high "reply OK"
 ```
 
@@ -191,18 +259,18 @@ opencode run --model qoder-cn-local/qwen3.7-max --variant high "reply OK"
 |--------|------|-------------|
 | GET | `/health` | Health check |
 | GET | `/v1/models` | Model list |
-| POST | `/v1/chat/completions` | OpenAI-compatible chat with tools field adaptation |
-| POST | `/v1/messages` | Anthropic-compatible chat with tool_use field adaptation |
+| POST | `/v1/chat/completions` | OpenAI-compatible chat with tools |
+| POST | `/v1/messages` | Anthropic-compatible chat with tool_use |
 | POST | `/v1/messages/count_tokens` | Token estimation |
 
 ## Reasoning Options
 
-Set global defaults via environment variables:
+Set global defaults via config or environment variables:
 
-```powershell
-$env:QODERCN_REASONING_EFFORT = "high"
-$env:QODERCN_CONTEXT_WINDOW = "200000"
-$env:QODERCN_MAX_OUTPUT_TOKENS = "4096"
+```bash
+qorder-proxy config set reasoningEffort high
+qorder-proxy config set contextWindow 200000
+qorder-proxy config set maxOutputTokens 4096
 ```
 
 Or specify per request via `reasoning_effort`, `context_window`, and `max_tokens`.
@@ -220,19 +288,61 @@ When a request includes tool parameters, streaming is downgraded to a non-stream
 - Each request spawns a new CLI subprocess
 - If the model emits invalid JSON or refuses the tool format, the response falls back to plain text
 
-## Quick Verification
+## Security Boundaries
 
-```powershell
-curl.exe http://127.0.0.1:3000/health
-curl.exe http://127.0.0.1:3000/v1/models
-curl.exe http://127.0.0.1:3000/v1/chat/completions `
-  -H "Content-Type: application/json" `
-  -d "{\"model\":\"qoder-cn\",\"messages\":[{\"role\":\"user\",\"content\":\"reply OK\"}]}"
+- Default host is `127.0.0.1`
+- Not intended or supported for public services, shared services, or commercial APIs
+- Logs redact tokens, cookies, Authorization headers, and other sensitive data
+- Config file permissions set to 0600 (owner read/write only)
+
+### Authentication
+
+| Backend | Auth Method | Environment Variable |
+|---------|------------|--------------------|
+| CN (`qoderclicn`) | Personal Access Token | `QODERCN_PERSONAL_ACCESS_TOKEN` |
+| Global (`qodercli`) | OAuth login (`qodercli login`) | Not required |
+
+## Safety Recommendations
+
+- Use only on your own machine
+- Bind only to `127.0.0.1`
+- Do not bind to `0.0.0.0` and do not expose the service to the public internet
+- Do not send your Token to anyone
+- Do not commit `.env` to Git
+- If you suspect a Token leak, revoke the PAT immediately from the official Qoder account page and create a new one
+
+## Web Console
+
+After starting the proxy, visit:
+
+```text
+http://127.0.0.1:3000/ui
 ```
+
+| Tab | Description |
+|-----|-------------|
+| Dashboard | Show /health status, Base URL, model count |
+| Models | List models from /v1/models |
+| Chat Test | Simple non-streaming test via /v1/chat/completions |
+| Config | Generate OpenAI / Anthropic / OpenCode config examples |
+| Usage / Credits | Local usage statistics |
+
+### Usage Statistics Note
+
+- Usage page shows **local estimated data**, not official Qoder billing or quota
+- Token counts are character-based estimates, marked as `estimated`
+- UI does not read, save, or display Qoder PAT
+
+### Usage API
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/usage/local` | Return local usage statistics |
+| POST | `/usage/reset-local` | Reset local usage statistics |
 
 ## Testing
 
-```powershell
+```bash
 npm test
 ```
 
