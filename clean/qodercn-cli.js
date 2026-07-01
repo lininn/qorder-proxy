@@ -765,6 +765,7 @@ module.exports = {
   extractStreamDelta,
   fixLongAppendSystemPrompt,
   getCliBackend,
+  hasStoredCredentials,
   normalizeMessages,
   resolveCliCommand,
   runQoderCnCli,
