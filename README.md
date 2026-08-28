@@ -245,6 +245,25 @@ export ANTHROPIC_AUTH_TOKEN="not-used"
 
 `ANTHROPIC_BASE_URL` 不要追加 `/v1`，客户端通常会自动拼接 API 路径。
 
+### Codex (Responses API) 兼容接口
+
+新版 Codex CLI（0.130+）只接受 `wire_api = "responses"`，即调用 `/v1/responses`。已在代理中实现。
+
+`~/.codex/config.toml`：
+
+```toml
+model_provider = "custom"
+model = "qoder-cn"
+[model_providers.custom]
+name = "custom"
+wire_api = "responses"
+requires_openai_auth = false
+base_url = "http://127.0.0.1:3000/v1"
+experimental_bearer_token = "not-used"
+```
+
+说明：`/v1/responses` 会把上游完整结果再回放为 SSE（`response.created … response.completed`），并支持工具调用（返回 `function_call` 项，由客户端执行）。若模型输出“指令注入拦截/哨兵拒绝”类提示，属模型自身安全过滤器行为，非代理问题。
+
 ### OpenCode 示例
 
 仓库自带 `opencode.json` 配置文件：
@@ -262,6 +281,7 @@ opencode run --model qoder-cn-local/qwen3.7-max --variant high "reply OK"
 | POST | `/v1/chat/completions` | OpenAI 兼容格式对话，支持 tools |
 | POST | `/v1/messages` | Anthropic 兼容格式对话，支持 tool_use |
 | POST | `/v1/messages/count_tokens` | Token 估算 |
+| POST | `/v1/responses` | OpenAI Responses API 对话，支持 tool calls（供 Codex CLI / Responses API 客户端使用） |
 
 ## 推理参数
 
