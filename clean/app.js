@@ -24,6 +24,7 @@ const {
 const path = require('path');
 const { trackRequest, getUsage, resetUsage, saveUsage, extractTextFromMessages } = require('./usage');
 const { executeToolCall } = require('./tools-executor');
+const responses = require('./responses');
 
 const MODEL_ID = DEFAULT_MODEL_ID;
 
@@ -38,8 +39,8 @@ function validateChatRequest(body) {
     if (!message || typeof message !== 'object') {
       throw new AppError(400, 'invalid_messages', 'Each message must be an object.');
     }
-    // Allow system, user, assistant, and tool roles for multi-turn tool use
-    if (!['system', 'user', 'assistant', 'tool'].includes(message.role)) {
+    // Allow system, user, assistant, tool (and developer, mapped to system)
+    if (!['system', 'user', 'assistant', 'tool', 'developer'].includes(message.role)) {
       throw new AppError(400, 'unsupported_role', `Unsupported message role: ${message.role}`);
     }
   }
@@ -257,6 +258,8 @@ function createApp() {
 
     try {
       validateChatRequest(req.body);
+      // Map OpenAI 'developer' role to 'system' for the CLI (Pi and some clients send 'developer')
+      req.body.messages = req.body.messages.map((m) => (m.role === 'developer' ? { ...m, role: 'system' } : m));
       const model = req.body.model || MODEL_ID;
       const requestOptions = extractRequestOptions(req.body);
       const tools = Array.isArray(req.body.tools) ? req.body.tools : null;
@@ -674,6 +677,87 @@ function createApp() {
         isError: true,
       });
       if (!res.headersSent && !res.writableEnded) anthropicError(res, error);
+    }
+  });
+
+  app.post('/v1/responses', async (req, res) => {
+    const started = Date.now();
+    const controller = new AbortController();
+    req.on('aborted', () => controller.abort());
+
+    try {
+      if (!req.body || typeof req.body !== 'object') {
+        throw new AppError(400, 'invalid_request', 'Request body must be a JSON object.');
+      }
+
+      const model = req.body.model || MODEL_ID;
+      const requestOptions = extractRequestOptions(req.body);
+      const messages = responses.responsesInputToMessages(req.body.input, req.body.instructions);
+      const normalizedTools = Array.isArray(req.body.tools) ? normalizeOpenAiTools(req.body.tools) : null;
+
+      if (!Array.isArray(messages) || messages.length === 0) {
+        throw new AppError(400, 'invalid_messages', 'input must contain at least one message.');
+      }
+
+      const id = `resp_${Date.now()}`;
+      log('responses request accepted', {
+        model,
+        message_count: messages.length,
+        stream: Boolean(req.body.stream),
+        tool_count: normalizedTools ? normalizedTools.length : 0,
+        reasoning_effort: requestOptions.reasoningEffort,
+      });
+
+      // Always resolve the upstream call non-streaming so tool calls can be
+      // detected, then replay as SSE if the client requested streaming.
+      const content = await qoderCli.runQoderCnCli({
+        messages,
+        model,
+        tools: normalizedTools,
+        reasoningEffort: requestOptions.reasoningEffort,
+        contextWindow: requestOptions.contextWindow,
+        maxOutputTokens: requestOptions.maxOutputTokens,
+        signal: controller.signal,
+      });
+
+      const parsedOutput = normalizedTools ? parseToolCallOutput(content) : null;
+
+      if (req.body.stream) {
+        res.status(200);
+        res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+        res.flushHeaders?.();
+        responses.writeResponseStream(res, { id, model, content, parsedOutput });
+        res.end();
+      } else {
+        res.json(responses.createResponseObject({ id, model, content, parsedOutput }));
+      }
+
+      log('responses request completed', {
+        duration_ms: Date.now() - started,
+        tool_calls: parsedOutput?.type === 'tool_calls',
+      });
+      trackRequest({
+        model,
+        inputText: extractTextFromMessages(messages),
+        outputText: content || '',
+        isError: false,
+      });
+    } catch (error) {
+      log('responses request failed', {
+        code: error.code || 'internal_error',
+        status: error.status || 500,
+        duration_ms: Date.now() - started,
+        message: error.message,
+      });
+      trackRequest({
+        model: req.body?.model || MODEL_ID,
+        inputText: '',
+        outputText: '',
+        isError: true,
+      });
+      if (!res.headersSent && !res.writableEnded) openAiError(res, error);
     }
   });
 
