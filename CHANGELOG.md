@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **GLM-5.3 / GLM-5.3-Flash models**: Register `glm-5.3` and `glm-5.3-flash` so they route to `GLM-5.3` / `GLM-5.3-Flash` on the CLI instead of silently falling back to `auto`.
+
 ## [1.4.0] - 2026-06-06
 
 ### Added

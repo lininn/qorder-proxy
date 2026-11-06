@@ -70,6 +70,28 @@ test('getModel returns correct model for known ID', () => {
   assert.equal(flash.cliModel, 'DeepSeek-V4-Flash');
 });
 
+test('GLM-5.3 and GLM-5.3-Flash route to their CLI models', () => {
+  const glm53 = getModel('glm-5.3');
+  assert.ok(glm53);
+  assert.equal(glm53.cliModel, 'GLM-5.3');
+  assert.equal(glm53.reasoning, true);
+
+  const glm53Flash = getModel('glm-5.3-flash');
+  assert.ok(glm53Flash);
+  assert.equal(glm53Flash.cliModel, 'GLM-5.3-Flash');
+  assert.equal(glm53Flash.reasoning, true);
+
+  assert.equal(resolveModelRoute('glm-5.3').cliModel, 'GLM-5.3');
+  assert.equal(resolveModelRoute('glm-5.3-flash').cliModel, 'GLM-5.3-Flash');
+});
+
+test('DeepSeek-V4-Pro routes to its CLI model', () => {
+  const dsv4 = getModel('deepseek-v4-pro');
+  assert.ok(dsv4);
+  assert.equal(dsv4.cliModel, 'DeepSeek-V4-Pro');
+  assert.equal(resolveModelRoute('deepseek-v4-pro').cliModel, 'DeepSeek-V4-Pro');
+});
+
 test('getModel returns undefined for unknown ID', () => {
   assert.equal(getModel('nonexistent-model'), undefined);
   assert.equal(getModel(''), undefined);
