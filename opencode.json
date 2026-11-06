@@ -67,6 +67,26 @@
             "max": { "reasoningEffort": "max" }
           }
         },
+        "glm-5.3": {
+          "name": "GLM-5.3",
+          "reasoning": true,
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" },
+            "max": { "reasoningEffort": "max" }
+          }
+        },
+        "glm-5.3-flash": {
+          "name": "GLM-5.3-Flash",
+          "reasoning": true,
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "medium": { "reasoningEffort": "medium" },
+            "high": { "reasoningEffort": "high" },
+            "max": { "reasoningEffort": "max" }
+          }
+        },
         "kimi-k2.6": {
           "name": "Kimi-K2.6",
           "reasoning": true,

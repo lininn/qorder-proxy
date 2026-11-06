@@ -81,6 +81,9 @@ async function testModels() {
   assert(ids.includes('qoder-cn'), 'Missing model "qoder-cn"');
   assert(ids.includes('qwen3.7-max'), 'Missing model "qwen3.7-max"');
   assert(ids.includes('deepseek-v4-flash'), 'Missing model "deepseek-v4-flash"');
+  assert(ids.includes('deepseek-v4-pro'), 'Missing model "deepseek-v4-pro"');
+  assert(ids.includes('glm-5.3'), 'Missing model "glm-5.3"');
+  assert(ids.includes('glm-5.3-flash'), 'Missing model "glm-5.3-flash"');
 
   console.log(`        Models: ${ids.join(', ')}`);
 }
